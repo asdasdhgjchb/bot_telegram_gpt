@@ -1,0 +1,80 @@
+# Телеграм бот ChatGPT
+import config
+import logging
+import openai
+import asyncio
+from gpytranslate import Translator
+
+from aiogram import Bot, Dispatcher, executor, types
+from config import *
+
+# log
+logging.basicConfig(level=logging.INFO)
+
+# init translator
+t = Translator()
+
+# init openai
+openai.api_key = config.OPENAI_TOKEN
+
+# init aiogram
+bot = Bot(token=config.TOKEN)
+dp = Dispatcher(bot)
+language = 'ru'
+users = read_users()
+
+
+@dp.message_handler(commands="start")
+async def press_start(message: types.Message):
+    await message.answer(
+        "Здравствуйте, буду рад помочь вам с вашими вопросами!")
+
+
+#
+#
+# @dp.callback_query_handler(lambda c: c.data in ['ru', 'en'])
+# async def process_callback_kb1btn1(callback_query: types.CallbackQuery):
+#     global language
+#     code = callback_query.data
+#     if callback_query.from_user.id in users:
+#         if code == "ru":
+#             await bot.send_message(callback_query.from_user.id, f'{users.name}')
+#         else:
+#             await bot.send_message(callback_query.from_user.id, f'Язык изменен на английский.')
+#     else:
+#         add_user(users, callback_query.from_user.id, 'en')
+#         await bot.send_message(callback_query.from_user.id, f'Язык изменен на английский. урааааааааааааааа{users}')
+
+
+# @dp.message_handler(commands='change_language')
+# async def check_language(message: types.Message):
+#     await message.reply("выберите язык из существующих:", reply_markup=config.greet_btn)
+
+
+# ls = ["сочинение", "эссе", "рассказ", ""]
+@dp.message_handler()
+async def gpt_answer(message: types.Message):
+    await message.answer("ChatGPT: Генерирую ответ ...")
+
+    model_engine = "text-davinci-003"
+    max_tokens = config.find_all(message.text)
+    if '?' in message.text or '..' in message.text:
+        max_tokens = 512
+    prompt = await t.translate(message.text, targetlang=language)
+    completion = openai.Completion.create(
+        engine=model_engine,
+        prompt=prompt.text,
+        max_tokens=max_tokens,
+        temperature=0.5,
+        top_p=1,
+        frequency_penalty=0,
+        presence_penalty=0
+    )
+
+    translated_result = await t.translate(completion.choices[0].text, targetlang=language)
+    await message.answer(translated_result.text)
+
+
+# run long-polling
+if __name__ == "__main__":
+    executor.start_polling(dp, skip_updates=True)
