@@ -1,0 +1,48 @@
+from aiogram.types import ReplyKeyboardMarkup, KeyboardButton
+from aiogram import types
+import pandas as pd
+
+TOKEN = "tooken"  # obtained from @BotFather
+OPENAI_TOKEN = "token"  # obtained from https://platform.openai.com/account/api-keys
+
+
+def find_all(text):
+    import pymorphy2
+
+    morph = pymorphy2.MorphAnalyzer()
+    ls = text
+    ll = ''
+    for ch in ls:
+        if ch.isalpha() or ch in " \n":
+            ll += ch
+    words = ll.split()
+    n = 128
+    for word in words:
+        if morph.parse(word)[0].normal_form in ["сочинение", "история", "эссе", "рассказ", "сказка", 'стихотворение',
+                                                'пересказ']:
+            n = 1024
+            break
+    return n
+
+
+btn_ru = types.InlineKeyboardButton('ru', callback_data='ru')
+btn_en = types.InlineKeyboardButton('en', callback_data='en')
+greet_btn = types.InlineKeyboardMarkup().row(btn_ru, btn_en)
+
+
+def read_users():
+    df = pd.read_csv('users.csv', sep=';')
+    return df
+
+
+def add_user(users: dict, user_fullname: str, value):
+    list_row = [user_fullname, value]
+    users.loc[len(users)] = list_row
+
+
+def save_users(users: pd.DataFrame):
+    users.to_csv('users.csv', sep=';', index=False)
+
+
+def update_user_mailng(users: pd.DataFrame, user_id, value):
+    users.at[user_id, 'is_mailing'] = value
