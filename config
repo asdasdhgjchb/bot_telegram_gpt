@@ -2,8 +2,8 @@ from aiogram.types import ReplyKeyboardMarkup, KeyboardButton
 from aiogram import types
 import pandas as pd
 
-TOKEN = "tooken"  # obtained from @BotFather
-OPENAI_TOKEN = "token"  # obtained from https://platform.openai.com/account/api-keys
+TOKEN = "5870552130:AAEHTzvHzHEjjnt9n9XEHgz_qXfXcbPKGMc"  # obtained from @BotFather
+OPENAI_TOKEN = "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"  # obtained from https://platform.openai.com/account/api-keys
 
 
 def find_all(text):
@@ -35,8 +35,8 @@ def read_users():
     return df
 
 
-def add_user(users: dict, user_fullname: str, value):
-    list_row = [user_fullname, value]
+def add_user(users: dict, user_fullname: str, language, id):
+    list_row = [len(users), user_fullname, language, False, id]
     users.loc[len(users)] = list_row
 
 
@@ -44,5 +44,18 @@ def save_users(users: pd.DataFrame):
     users.to_csv('users.csv', sep=';', index=False)
 
 
-def update_user_mailng(users: pd.DataFrame, user_id, value):
-    users.at[user_id, 'is_mailing'] = value
+def check_user_id(users: dict, id: int):
+    if id in list(users['id.1']):
+        return False
+    else:
+        return True
+
+
+def change_language(users: pd.DataFrame, ch_lan, id):
+    ind = list(users['id.1']).index(id)
+    users.at[ind, 'language'] = ch_lan
+
+
+def send_language(users: pd.DataFrame, id):
+    ind = list(users['id.1']).index(id)
+    return users.at[ind, 'language']
